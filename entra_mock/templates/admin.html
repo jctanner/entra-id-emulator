@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entra ID Mock - Admin</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #1a1a1a;
+        }
+        .topbar {
+            background: #0078d4;
+            color: white;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .topbar h1 { font-size: 18px; font-weight: 600; }
+        .topbar .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        .layout { display: flex; min-height: calc(100vh - 48px); }
+        .sidebar {
+            width: 200px;
+            background: #fafafa;
+            border-right: 1px solid #e0e0e0;
+            padding: 16px 0;
+        }
+        .sidebar a {
+            display: block;
+            padding: 10px 24px;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .sidebar a:hover { background: #e8e8e8; }
+        .sidebar a.active { background: #e0e0e0; font-weight: 600; color: #0078d4; }
+        .main { flex: 1; padding: 24px; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .toolbar h2 { font-size: 20px; font-weight: 600; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            text-align: left;
+            padding: 10px 14px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        th { background: #fafafa; font-weight: 600; color: #444; }
+        tr:hover td { background: #f8f8f8; }
+        .btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        .btn-primary { background: #0078d4; color: white; }
+        .btn-primary:hover { background: #106ebe; }
+        .btn-danger { background: #d13438; color: white; }
+        .btn-danger:hover { background: #a4262c; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .btn + .btn { margin-left: 6px; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 100;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 80px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: white;
+            width: 520px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        }
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header .close {
+            background: none; border: none; font-size: 20px; cursor: pointer; color: #666;
+        }
+        .modal-body { padding: 20px; }
+        .modal-footer {
+            padding: 12px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #333;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        .form-group textarea { min-height: 60px; resize: vertical; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #0078d4;
+            outline: none;
+        }
+        .form-hint { font-size: 11px; color: #888; margin-top: 2px; }
+        .tag {
+            display: inline-block;
+            background: #e8e8e8;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin: 2px;
+        }
+        .mono { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 12px; }
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 10px 20px;
+            border-radius: 4px;
+            color: white;
+            font-size: 14px;
+            z-index: 200;
+            transition: opacity 0.3s;
+        }
+        .toast-success { background: #107c10; }
+        .toast-error { background: #d13438; }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>Entra ID Mock</h1>
+        <span class="badge">Admin Console</span>
+    </div>
+
+    <div class="layout">
+        <div class="sidebar">
+            <a class="active" onclick="showSection('tenants')">Tenants</a>
+            <a onclick="showSection('users')">Users</a>
+            <a onclick="showSection('groups')">Groups</a>
+            <a onclick="showSection('clients')">Clients</a>
+        </div>
+
+        <div class="main">
+            <!-- Tenants -->
+            <div id="sec-tenants" class="section active">
+                <div class="toolbar">
+                    <h2>Tenants</h2>
+                    <button class="btn btn-primary" onclick="openTenantModal()">Add Tenant</button>
+                </div>
+                <table>
+                    <thead><tr><th>ID</th><th>Domain</th><th>Display Name</th><th>Actions</th></tr></thead>
+                    <tbody id="tenants-body"></tbody>
+                </table>
+            </div>
+
+            <!-- Users -->
+            <div id="sec-users" class="section">
+                <div class="toolbar">
+                    <h2>Users</h2>
+                    <button class="btn btn-primary" onclick="openUserModal()">Add User</button>
+                </div>
+                <table>
+                    <thead><tr><th>Display Name</th><th>UPN</th><th>Email</th><th>Tenant</th><th>Groups</th><th>Actions</th></tr></thead>
+                    <tbody id="users-body"></tbody>
+                </table>
+            </div>
+
+            <!-- Groups -->
+            <div id="sec-groups" class="section">
+                <div class="toolbar">
+                    <h2>Groups</h2>
+                    <button class="btn btn-primary" onclick="openGroupModal()">Add Group</button>
+                </div>
+                <table>
+                    <thead><tr><th>ID</th><th>Name</th><th>Tenant</th><th>Members</th><th>Actions</th></tr></thead>
+                    <tbody id="groups-body"></tbody>
+                </table>
+            </div>
+
+            <!-- Clients -->
+            <div id="sec-clients" class="section">
+                <div class="toolbar">
+                    <h2>Clients</h2>
+                    <button class="btn btn-primary" onclick="openClientModal()">Add Client</button>
+                </div>
+                <table>
+                    <thead><tr><th>Display Name</th><th>Client ID</th><th>Type</th><th>Tenant</th><th>Redirect URIs</th><th>Actions</th></tr></thead>
+                    <tbody id="clients-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <span id="modal-title">Add</span>
+                <button class="close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" id="modal-save" onclick="saveModal()">Save</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+const API = '/admin/api';
+let currentModal = null;
+let editingId = null;
+
+// Cache for dropdowns
+let tenantsCache = [];
+let usersCache = [];
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+
+function showSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+    document.getElementById('sec-' + name).classList.add('active');
+    document.querySelectorAll('.sidebar a').forEach(a => {
+        if (a.textContent.toLowerCase() === name) a.classList.add('active');
+    });
+    loadSection(name);
+}
+
+function loadSection(name) {
+    if (name === 'tenants') loadTenants();
+    else if (name === 'users') loadUsers();
+    else if (name === 'groups') loadGroups();
+    else if (name === 'clients') loadClients();
+}
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+
+function toast(msg, type) {
+    const el = document.createElement('div');
+    el.className = 'toast toast-' + type;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 2500);
+}
+
+// ── API helpers ──────────────────────────────────────────────────────────────
+
+async function api(method, path, body) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API + path, opts);
+    if (res.status === 204) return null;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
+}
+
+// ── Modal helpers ────────────────────────────────────────────────────────────
+
+function openModal(title) {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.getElementById('modal-body').innerHTML = '';
+    currentModal = null;
+    editingId = null;
+}
+
+function val(id) { return document.getElementById(id)?.value?.trim() || ''; }
+
+// ── Tenants ──────────────────────────────────────────────────────────────────
+
+async function loadTenants() {
+    const data = await api('GET', '/tenants');
+    tenantsCache = data;
+    const tbody = document.getElementById('tenants-body');
+    if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No tenants configured</td></tr>';
+        return;
+    }
+    tbody.innerHTML = data.map(t => `
+        <tr>
+            <td class="mono">${esc(t.id)}</td>
+            <td>${esc(t.domain)}</td>
+            <td>${esc(t.display_name)}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="openTenantModal('${esc(t.id)}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteTenant('${esc(t.id)}')">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openTenantModal(id) {
+    currentModal = 'tenant';
+    editingId = id || null;
+    const t = id ? tenantsCache.find(x => x.id === id) : {};
+    document.getElementById('modal-body').innerHTML = `
+        <div class="form-group">
+            <label>Tenant ID</label>
+            <input id="f-tenant-id" value="${esc(t.id || '')}" placeholder="auto-generated if empty" ${id ? 'readonly' : ''}>
+        </div>
+        <div class="form-group">
+            <label>Domain</label>
+            <input id="f-tenant-domain" value="${esc(t.domain || '')}" placeholder="contoso.onmicrosoft.com">
+        </div>
+        <div class="form-group">
+            <label>Display Name</label>
+            <input id="f-tenant-name" value="${esc(t.display_name || '')}" placeholder="Contoso">
+        </div>
+    `;
+    openModal(id ? 'Edit Tenant' : 'Add Tenant');
+}
+
+async function deleteTenant(id) {
+    if (!confirm('Delete this tenant? This will not cascade-delete users/clients.')) return;
+    await api('DELETE', '/tenants/' + id);
+    toast('Tenant deleted', 'success');
+    loadTenants();
+}
+
+// ── Users ────────────────────────────────────────────────────────────────────
+
+async function loadUsers() {
+    const data = await api('GET', '/users');
+    usersCache = data;
+    if (!tenantsCache.length) tenantsCache = await api('GET', '/tenants');
+    const tbody = document.getElementById('users-body');
+    if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No users configured</td></tr>';
+        return;
+    }
+    tbody.innerHTML = data.map(u => `
+        <tr>
+            <td>${esc(u.display_name)}</td>
+            <td class="mono">${esc(u.upn)}</td>
+            <td>${esc(u.email)}</td>
+            <td>${esc(u.tenant_name || u.tenant_id)}</td>
+            <td>${(u.groups||[]).map(g => '<span class="tag">' + esc(g.name) + '</span>').join(' ')}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="openUserModal('${esc(u.id)}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteUser('${esc(u.id)}')">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function openUserModal(id) {
+    currentModal = 'user';
+    editingId = id || null;
+    const u = id ? usersCache.find(x => x.id === id) : {};
+    if (!groupsCache.length) groupsCache = await api('GET', '/groups');
+    const userGroupIds = (u.groups || []).map(g => g.id);
+    const tenantOpts = tenantsCache.map(t =>
+        `<option value="${esc(t.id)}" ${t.id === u.tenant_id ? 'selected' : ''}>${esc(t.display_name)} (${esc(t.domain)})</option>`
+    ).join('');
+    const groupOpts = groupsCache.map(g =>
+        `<option value="${esc(g.id)}" ${userGroupIds.includes(g.id) ? 'selected' : ''}>${esc(g.name)} (${esc(g.tenant_name || g.tenant_id)})</option>`
+    ).join('');
+    document.getElementById('modal-body').innerHTML = `
+        <div class="form-group">
+            <label>Tenant</label>
+            <select id="f-user-tenant">${tenantOpts}</select>
+        </div>
+        <div class="form-group">
+            <label>Display Name</label>
+            <input id="f-user-name" value="${esc(u.display_name || '')}">
+        </div>
+        <div class="form-group">
+            <label>UPN (User Principal Name)</label>
+            <input id="f-user-upn" value="${esc(u.upn || '')}" placeholder="user@domain.com">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input id="f-user-email" value="${esc(u.email || '')}">
+        </div>
+        <div class="form-group">
+            <label>Given Name</label>
+            <input id="f-user-given" value="${esc(u.given_name || '')}">
+        </div>
+        <div class="form-group">
+            <label>Family Name</label>
+            <input id="f-user-family" value="${esc(u.family_name || '')}">
+        </div>
+        <div class="form-group">
+            <label>Password ${id ? '(leave blank to keep current)' : ''}</label>
+            <input id="f-user-pass" type="password" placeholder="${id ? 'unchanged' : ''}">
+        </div>
+        <div class="form-group">
+            <label>Groups</label>
+            <select id="f-user-groups" multiple size="6">${groupOpts}</select>
+            <div class="form-hint">Hold Ctrl/Cmd to select multiple groups</div>
+        </div>
+    `;
+    openModal(id ? 'Edit User' : 'Add User');
+}
+
+async function deleteUser(id) {
+    if (!confirm('Delete this user?')) return;
+    await api('DELETE', '/users/' + id);
+    toast('User deleted', 'success');
+    loadUsers();
+}
+
+// ── Groups ───────────────────────────────────────────────────────────────────
+
+async function loadGroups() {
+    const data = await api('GET', '/groups');
+    groupsCache = data;
+    if (!usersCache.length) usersCache = await api('GET', '/users');
+    if (!tenantsCache.length) tenantsCache = await api('GET', '/tenants');
+    const tbody = document.getElementById('groups-body');
+    if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No groups configured</td></tr>';
+        return;
+    }
+    tbody.innerHTML = data.map(g => `
+        <tr>
+            <td class="mono">${esc(g.id)}</td>
+            <td>${esc(g.name)}</td>
+            <td>${esc(g.tenant_name || g.tenant_id)}</td>
+            <td>${(g.member_ids||[]).map(uid => {
+                const u = usersCache.find(x => x.id === uid);
+                return '<span class="tag">' + esc(u ? u.display_name : uid) + '</span>';
+            }).join(' ')}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="openGroupModal('${esc(g.id)}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteGroup('${esc(g.id)}')">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+let groupsCache = [];
+
+async function openGroupModal(id) {
+    currentModal = 'group';
+    editingId = id || null;
+    if (!groupsCache.length) groupsCache = await api('GET', '/groups');
+    if (!usersCache.length) usersCache = await api('GET', '/users');
+    const g = id ? groupsCache.find(x => x.id === id) : {};
+    const tenantOpts = tenantsCache.map(t =>
+        `<option value="${esc(t.id)}" ${t.id === g.tenant_id ? 'selected' : ''}>${esc(t.display_name)} (${esc(t.domain)})</option>`
+    ).join('');
+    const memberOpts = usersCache.map(u =>
+        `<option value="${esc(u.id)}" ${(g.member_ids||[]).includes(u.id) ? 'selected' : ''}>${esc(u.display_name)} (${esc(u.upn)})</option>`
+    ).join('');
+    document.getElementById('modal-body').innerHTML = `
+        <div class="form-group">
+            <label>Group ID</label>
+            <input id="f-group-id" value="${esc(g.id || '')}" placeholder="auto-generated if empty" ${id ? 'readonly' : ''}>
+        </div>
+        <div class="form-group">
+            <label>Tenant</label>
+            <select id="f-group-tenant">${tenantOpts}</select>
+        </div>
+        <div class="form-group">
+            <label>Group Name</label>
+            <input id="f-group-name" value="${esc(g.name || '')}">
+        </div>
+        <div class="form-group">
+            <label>Members</label>
+            <select id="f-group-members" multiple size="6">${memberOpts}</select>
+            <div class="form-hint">Hold Ctrl/Cmd to select multiple users</div>
+        </div>
+    `;
+    openModal(id ? 'Edit Group' : 'Add Group');
+}
+
+async function deleteGroup(id) {
+    if (!confirm('Delete this group?')) return;
+    await api('DELETE', '/groups/' + id);
+    toast('Group deleted', 'success');
+    loadGroups();
+}
+
+// ── Clients ──────────────────────────────────────────────────────────────────
+
+let clientsCache = [];
+
+async function loadClients() {
+    const data = await api('GET', '/clients');
+    clientsCache = data;
+    if (!tenantsCache.length) tenantsCache = await api('GET', '/tenants');
+    const tbody = document.getElementById('clients-body');
+    if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No clients configured</td></tr>';
+        return;
+    }
+    tbody.innerHTML = data.map(c => `
+        <tr>
+            <td>${esc(c.display_name)}</td>
+            <td class="mono">${esc(c.client_id)}</td>
+            <td><span class="tag">${esc(c.client_type)}</span></td>
+            <td>${esc(c.tenant_name || c.tenant_id)}</td>
+            <td>${(c.redirect_uris||[]).map(u => '<div class="mono" style="font-size:11px">' + esc(u) + '</div>').join('')}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="openClientModal('${esc(c.client_id)}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteClient('${esc(c.client_id)}')">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openClientModal(id) {
+    currentModal = 'client';
+    editingId = id || null;
+    const c = id ? clientsCache.find(x => x.client_id === id) : {};
+    const tenantOpts = tenantsCache.map(t =>
+        `<option value="${esc(t.id)}" ${t.id === c.tenant_id ? 'selected' : ''}>${esc(t.display_name)} (${esc(t.domain)})</option>`
+    ).join('');
+    document.getElementById('modal-body').innerHTML = `
+        <div class="form-group">
+            <label>Client ID</label>
+            <input id="f-client-id" value="${esc(c.client_id || '')}" placeholder="auto-generated if empty" ${id ? 'readonly' : ''}>
+        </div>
+        <div class="form-group">
+            <label>Tenant</label>
+            <select id="f-client-tenant">${tenantOpts}</select>
+        </div>
+        <div class="form-group">
+            <label>Display Name</label>
+            <input id="f-client-name" value="${esc(c.display_name || '')}">
+        </div>
+        <div class="form-group">
+            <label>Client Secret ${id ? '(leave blank to keep current)' : ''}</label>
+            <input id="f-client-secret" type="password" placeholder="${id ? 'unchanged' : ''}">
+        </div>
+        <div class="form-group">
+            <label>Client Type</label>
+            <select id="f-client-type">
+                <option value="confidential" ${(c.client_type||'confidential')==='confidential'?'selected':''}>Confidential</option>
+                <option value="public" ${c.client_type==='public'?'selected':''}>Public</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Redirect URIs</label>
+            <textarea id="f-client-redirects" placeholder="One URI per line">${esc((c.redirect_uris||[]).join('\n'))}</textarea>
+            <div class="form-hint">One URI per line</div>
+        </div>
+        <div class="form-group">
+            <label>Allowed Scopes</label>
+            <input id="f-client-scopes" value="${esc((c.allowed_scopes||[]).join(' '))}" placeholder="openid profile email offline_access">
+            <div class="form-hint">Space-separated</div>
+        </div>
+        <div class="form-group">
+            <label>Application ID URI (optional)</label>
+            <input id="f-client-appuri" value="${esc(c.application_id_uri || '')}" placeholder="api://client-id">
+        </div>
+        <div class="form-group">
+            <label>Front-Channel Logout URI (optional)</label>
+            <input id="f-client-logout" value="${esc(c.front_channel_logout_uri || '')}">
+        </div>
+    `;
+    openModal(id ? 'Edit Client' : 'Add Client');
+}
+
+async function deleteClient(id) {
+    if (!confirm('Delete this client?')) return;
+    await api('DELETE', '/clients/' + id);
+    toast('Client deleted', 'success');
+    loadClients();
+}
+
+// ── Save modal ───────────────────────────────────────────────────────────────
+
+async function saveModal() {
+    try {
+        if (currentModal === 'tenant') await saveTenant();
+        else if (currentModal === 'user') await saveUser();
+        else if (currentModal === 'group') await saveGroup();
+        else if (currentModal === 'client') await saveClient();
+        closeModal();
+    } catch (e) {
+        toast(e.message, 'error');
+    }
+}
+
+async function saveTenant() {
+    const body = {
+        domain: val('f-tenant-domain'),
+        display_name: val('f-tenant-name'),
+    };
+    if (editingId) {
+        await api('PUT', '/tenants/' + editingId, body);
+        toast('Tenant updated', 'success');
+    } else {
+        const id = val('f-tenant-id');
+        if (id) body.id = id;
+        await api('POST', '/tenants', body);
+        toast('Tenant created', 'success');
+    }
+    loadTenants();
+}
+
+async function saveUser() {
+    const sel = document.getElementById('f-user-groups');
+    const groupIds = Array.from(sel.selectedOptions).map(o => o.value);
+    const body = {
+        tenant_id: val('f-user-tenant'),
+        display_name: val('f-user-name'),
+        upn: val('f-user-upn'),
+        email: val('f-user-email'),
+        given_name: val('f-user-given'),
+        family_name: val('f-user-family'),
+        group_ids: groupIds,
+    };
+    const pw = val('f-user-pass');
+    if (pw) body.password = pw;
+
+    if (editingId) {
+        await api('PUT', '/users/' + editingId, body);
+        toast('User updated', 'success');
+    } else {
+        if (!pw) { toast('Password is required for new users', 'error'); return; }
+        body.password = pw;
+        await api('POST', '/users', body);
+        toast('User created', 'success');
+    }
+    loadUsers();
+}
+
+async function saveGroup() {
+    const sel = document.getElementById('f-group-members');
+    const memberIds = Array.from(sel.selectedOptions).map(o => o.value);
+    const body = {
+        name: val('f-group-name'),
+        tenant_id: val('f-group-tenant'),
+        member_ids: memberIds,
+    };
+    if (editingId) {
+        await api('PUT', '/groups/' + editingId, body);
+        toast('Group updated', 'success');
+    } else {
+        const id = val('f-group-id');
+        if (id) body.id = id;
+        await api('POST', '/groups', body);
+        toast('Group created', 'success');
+    }
+    loadGroups();
+}
+
+async function saveClient() {
+    const redirects = val('f-client-redirects').split('\n').map(s => s.trim()).filter(Boolean);
+    const scopes = val('f-client-scopes').split(/\s+/).filter(Boolean);
+    const body = {
+        tenant_id: val('f-client-tenant'),
+        display_name: val('f-client-name'),
+        client_type: val('f-client-type'),
+        redirect_uris: redirects,
+        allowed_scopes: scopes,
+        application_id_uri: val('f-client-appuri') || null,
+        front_channel_logout_uri: val('f-client-logout') || null,
+    };
+    const secret = val('f-client-secret');
+    if (secret) body.client_secret = secret;
+
+    if (editingId) {
+        await api('PUT', '/clients/' + editingId, body);
+        toast('Client updated', 'success');
+    } else {
+        const id = val('f-client-id');
+        if (id) body.client_id = id;
+        await api('POST', '/clients', body);
+        toast('Client created', 'success');
+    }
+    loadClients();
+}
+
+// ── Utils ────────────────────────────────────────────────────────────────────
+
+function esc(s) {
+    if (!s) return '';
+    const d = document.createElement('div');
+    d.textContent = String(s);
+    return d.innerHTML;
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+
+loadTenants();
+</script>
+</body>
+</html>

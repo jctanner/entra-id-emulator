@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signed out</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f2f2f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .logout-container {
+            background: white;
+            padding: 44px;
+            width: 440px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .logout-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+        }
+        .logout-message {
+            font-size: 15px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="logout-container">
+        <div class="logout-title">You have been signed out</div>
+        <div class="logout-message">You can close this window.</div>
+    </div>
+
+    {% for uri in front_channel_uris %}
+    <iframe src="{{ uri }}" width="0" height="0" style="display:none;"></iframe>
+    {% endfor %}
+</body>
+</html>

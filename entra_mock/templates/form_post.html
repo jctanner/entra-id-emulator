@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Submitting...</title>
+</head>
+<body>
+    <form id="auto_submit" method="POST" action="{{ redirect_uri }}">
+        {% for key, value in params.items() %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}">
+        {% endfor %}
+        <noscript>
+            <p>JavaScript is disabled. Click the button below to continue.</p>
+            <button type="submit">Continue</button>
+        </noscript>
+    </form>
+    <script>document.getElementById('auto_submit').submit();</script>
+</body>
+</html>
