@@ -1,13 +1,13 @@
-# Configuring OCP 4.21 BYOIDC with Entra ID Mock
+# Configuring OCP 4.21 BYOIDC with entra-id-emulator
 
-This documents all the OpenShift cluster-side configuration needed to use the Entra ID mock server as an external OIDC identity provider via BYOIDC (TechPreview).
+This documents all the OpenShift cluster-side configuration needed to use the entra-id-emulator as an external OIDC identity provider via BYOIDC (TechPreview).
 
 ## Prerequisites
 
 - OCP 4.21 cluster running on libvirt
-- Entra mock server running at `https://entra.ocp.lab.net:8443`
-- CA certificate at `ocp-work/certs/ca.crt` (signs the entra mock's TLS cert)
-- Entra mock configured with:
+- entra-id-emulator running at `https://entra.ocp.lab.net:8443`
+- CA certificate at `ocp-work/certs/ca.crt` (signs the emulator's TLS cert)
+- entra-id-emulator configured with:
   - Console client: `11111111-2222-3333-4444-555555555555` (confidential)
   - CLI client: `22222222-3333-4444-5555-666666666666` (public)
   - Admins group: `g1g1g1g1-g1g1-g1g1-g1g1-g1g1g1g1g1g1`
@@ -26,7 +26,7 @@ watch oc get mcp
 
 ## Step 2: Create cluster-admin rolebinding for OIDC group
 
-Do this BEFORE changing authentication so OIDC users will have admin access once auth switches over. The entra mock puts group UUIDs (not names) in the `groups` claim.
+Do this BEFORE changing authentication so OIDC users will have admin access once auth switches over. The emulator puts group UUIDs (not names) in the `groups` claim.
 
 ```bash
 oc create clusterrolebinding oidc-cluster-admins \
@@ -46,7 +46,7 @@ oc create secret generic console-secret \
 
 ## Step 4: Create CA configmap
 
-The kube-apiserver needs to trust the entra mock's TLS certificate (signed by our CA).
+The kube-apiserver needs to trust the emulator's TLS certificate (signed by our CA).
 
 ```bash
 oc create configmap entra-ca \
@@ -65,7 +65,7 @@ d = json.load(sys.stdin)
 d['spec'] = {
     'type': 'OIDC',
     'oidcProviders': [{
-        'name': 'entra-id-mock',
+        'name': 'entra-id-emulator',
         'claimMappings': {
             'groups': {'claim': 'groups', 'prefixPolicy': 'NoPrefix'},
             'username': {'claim': 'preferred_username', 'prefixPolicy': 'NoPrefix'}
@@ -136,7 +136,7 @@ metadata:
 spec:
   type: OIDC
   oidcProviders:
-  - name: entra-id-mock
+  - name: entra-id-emulator
     claimMappings:
       groups:
         claim: groups
@@ -169,7 +169,7 @@ spec:
 | `FeatureGate/cluster` | cluster-scoped | Enables TechPreviewNoUpgrade for BYOIDC support |
 | `Authentication/cluster` | cluster-scoped | Configures OIDC provider, claim mappings, and clients |
 | `Secret/console-secret` | openshift-config | Client secret for the confidential console client |
-| `ConfigMap/entra-ca` | openshift-config | CA certificate bundle so kube-apiserver trusts the entra mock |
+| `ConfigMap/entra-ca` | openshift-config | CA certificate bundle so kube-apiserver trusts the emulator |
 | `ClusterRoleBinding/oidc-cluster-admins` | cluster-scoped | Maps OIDC Admins group UUID to cluster-admin role |
 
 ## Gotchas
@@ -178,5 +178,5 @@ spec:
 - **`oc apply` won't work on the Authentication CR** - use `oc replace` to remove the conflicting `webhookTokenAuthenticator` field.
 - **Scopes must include `profile`** - the `preferred_username` claim (used for username mapping) is only included in tokens when the `profile` scope is requested. Without it, kube-apiserver rejects the token with 401.
 - **oc-oidc caches tokens** in `~/.kube/cache/oc/`. If you change scopes or token lifetimes, delete the cache file to force a fresh login.
-- **CA trust for the CLI** - set `SSL_CERT_FILE` or use `--oidc-certificate-authority` so the `oc-oidc` exec plugin trusts the entra mock's self-signed cert.
-- **Groups claim uses UUIDs** - the entra mock puts group IDs (not names) in the `groups` claim. ClusterRoleBindings must reference the UUID.
+- **CA trust for the CLI** - set `SSL_CERT_FILE` or use `--oidc-certificate-authority` so the `oc-oidc` exec plugin trusts the emulator's self-signed cert.
+- **Groups claim uses UUIDs** - the emulator puts group IDs (not names) in the `groups` claim. ClusterRoleBindings must reference the UUID.
