@@ -2,6 +2,8 @@
 
 A lightweight Entra ID (Azure AD) emulator for local development and testing. Provides OIDC/OAuth2 endpoints, token issuance, and a management API.
 
+![Admin UI](docs/admin-ui.png)
+
 ## Features
 
 - **OIDC/OAuth2 endpoints** — discovery, authorize, token, JWKS, userinfo, logout
