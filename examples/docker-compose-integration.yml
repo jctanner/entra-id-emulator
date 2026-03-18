@@ -1,0 +1,64 @@
+version: "3"
+services:
+  entra-mock:
+    build: .
+    hostname: entra-mock
+    volumes:
+      - ./entra_mock:/app/entra_mock:Z
+      - ./config-integration.yaml:/app/config.yaml:ro,Z
+      - ./data:/app/data:Z
+      - ./run.py:/app/run.py:ro,Z
+    environment:
+      - FLASK_DEBUG=1
+      - FLASK_ENV=development
+    ports:
+      - "8080:8080"
+    networks:
+      default:
+        aliases:
+          - entra-mock.localtest.me
+
+  oauth2-proxy:
+    build:
+      context: ./reference.src/oauth2-proxy
+      args:
+        BUILD_IMAGE: docker.io/library/golang:1.25-bookworm
+        RUNTIME_IMAGE: docker.io/library/alpine:3
+        VERSION: dev
+    hostname: oauth2-proxy
+    command:
+      - --http-address=0.0.0.0:4180
+      - --cookie-secret=OQINaROshtE9TcZkNAm-5Zs2Pv3xaWytBmc5W7sPX7w=
+      - --cookie-secure=false
+      - --cookie-domain=.localtest.me
+      - --whitelist-domain=.localtest.me
+      - --upstream=http://httpbin:80
+      - --provider=entra-id
+      - --client-id=11111111-2222-3333-4444-555555555555
+      - --client-secret=my-client-secret
+      - --redirect-url=http://oauth2-proxy.localtest.me:4180/oauth2/callback
+      - --oidc-issuer-url=http://entra-mock.localtest.me:8080/a1b2c3d4-e5f6-7890-abcd-ef1234567890/v2.0
+      - --scope=openid profile email
+      - --email-domain=*
+      - --skip-provider-button=true
+      - --pass-access-token=true
+      - --show-debug-on-error=true
+      - --auth-logging=true
+      - --request-logging=true
+      - --standard-logging=true
+      - --errors-to-info-log=true
+    ports:
+      - "4180:4180"
+    depends_on:
+      - entra-mock
+      - httpbin
+    networks:
+      default:
+        aliases:
+          - oauth2-proxy.localtest.me
+
+  httpbin:
+    image: docker.io/kennethreitz/httpbin
+    hostname: httpbin
+    networks:
+      default: {}

@@ -1,0 +1,45 @@
+server:
+  host: "0.0.0.0"
+  port: 8080
+  scheme: "http"
+  external_hostname: "entra-mock.localtest.me:8080"
+
+tenants:
+  - id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    domain: "contoso.onmicrosoft.com"
+    display_name: "Contoso"
+
+users:
+  - id: "00000000-0000-0000-0000-000000000001"
+    tenant_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    upn: "admin@contoso.onmicrosoft.com"
+    email: "admin@contoso.com"
+    display_name: "Admin User"
+    given_name: "Admin"
+    family_name: "User"
+    password: "changeme"
+    groups:
+      - id: "g1g1g1g1-g1g1-g1g1-g1g1-g1g1g1g1g1g1"
+        name: "Admins"
+
+clients:
+  - client_id: "11111111-2222-3333-4444-555555555555"
+    tenant_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    display_name: "OAuth2 Proxy"
+    client_secret: "my-client-secret"
+    client_type: "confidential"
+    redirect_uris:
+      - "http://oauth2-proxy.localtest.me:4180/oauth2/callback"
+    # Uncomment to get v2.0 app-owned access tokens instead of Graph-like v1.0 tokens:
+    # application_id_uri: "api://11111111-2222-3333-4444-555555555555"
+    allowed_scopes:
+      - "openid"
+      - "profile"
+      - "email"
+      - "offline_access"
+
+token_lifetimes:
+  access_token_seconds: 3600
+  id_token_seconds: 3600
+  refresh_token_days: 90
+  auth_code_seconds: 60

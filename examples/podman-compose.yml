@@ -1,0 +1,14 @@
+version: "3"
+services:
+  entra-mock:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./entra_mock:/app/entra_mock:Z
+      - ./config.yaml:/app/config.yaml:ro,Z
+      - ./data:/app/data:Z
+      - ./run.py:/app/run.py:ro,Z
+    environment:
+      - FLASK_DEBUG=1
+      - FLASK_ENV=development
