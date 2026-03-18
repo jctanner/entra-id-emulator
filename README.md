@@ -26,8 +26,11 @@ The server starts on `http://localhost:8080`. Configuration is loaded from `conf
 
 ### With Docker/Podman
 
+See `examples/` for compose files. For example, with podman:
+
 ```bash
-docker-compose up --build
+cp examples/podman-compose.yml .
+podman-compose up --build
 ```
 
 ## Configuration
@@ -61,6 +64,9 @@ users:
     given_name: "Admin"
     family_name: "User"
     password: "changeme"
+    groups:
+      - id: "g1g1g1g1-g1g1-g1g1-g1g1-g1g1g1g1g1g1"
+        name: "Admins"
 
 clients:
   - client_id: "11111111-2222-3333-4444-555555555555"
@@ -107,6 +113,25 @@ curl -s -X POST http://localhost:8080/a1b2c3d4-e5f6-7890-abcd-ef1234567890/oauth
   -d "username=admin@contoso.onmicrosoft.com" \
   -d "password=changeme" \
   -d "scope=openid profile email"
+```
+
+## Project Structure
+
+```
+├── entra_mock/          # Flask application
+│   ├── routes/          # OIDC + admin API endpoints
+│   ├── templates/       # Login, logout, admin UI, error pages
+│   ├── app.py           # App factory
+│   ├── config.py        # YAML config loader
+│   ├── db.py            # SQLite schema, migrations, queries
+│   ├── keys.py          # RSA signing key management
+│   └── tokens.py        # JWT token generation
+├── examples/            # Docker/Podman compose files, oauth2-proxy config
+├── notes/               # Design specs and implementation notes
+├── config.yaml          # Default configuration with seed data
+├── run.py               # Entry point
+├── Dockerfile
+└── requirements.txt
 ```
 
 ## License
