@@ -13,7 +13,8 @@ A lightweight Entra ID (Azure AD) emulator for local development and testing. Pr
 - **Groups claim** — with overage handling (>200 groups)
 - **Token lifetime overrides** — per-tenant and per-client, with cascading defaults
 - **Admin REST API** — full CRUD for tenants, users, groups, and clients
-- **Admin web UI** — at `/admin/`
+- **Admin web UI** — at `/admin/`, password-protected via HTTP Basic Auth
+- **Landing page** — root path (`/`) with a link to the admin console
 - **SQLite storage** — zero external dependencies
 - **Configurable via YAML** — seed tenants, users, groups, and clients on startup
 
@@ -24,7 +25,7 @@ pip install -r requirements.txt
 python run.py
 ```
 
-The server starts on `http://localhost:8080`. Configuration is loaded from `config.yaml`.
+The server starts on `http://localhost:8080`. Configuration is loaded from `config.yaml`. Visit `/` for the landing page or `/admin/` for the admin console (default password: `changeme1234`).
 
 ### With Docker/Podman
 
@@ -45,6 +46,7 @@ server:
   port: 8080
   scheme: "http"
   external_hostname: "localhost:8080"
+  admin_password: "changeme1234"
 
 token_lifetimes:
   access_token_seconds: 3600
@@ -102,7 +104,14 @@ Override the config path with `ENTRA_MOCK_CONFIG` env var. The SQLite database p
 
 ## Admin API
 
-Full CRUD for tenants, users, groups, and clients at `/admin/api/`. See [API-USAGE.md](API-USAGE.md) for complete documentation with `curl` examples.
+Full CRUD for tenants, users, groups, and clients at `/admin/api/`. All admin routes (UI and API) are protected by HTTP Basic Auth when `admin_password` is set in the config. Any username is accepted; the password must match the configured value.
+
+See [API-USAGE.md](API-USAGE.md) for complete documentation with `curl` examples.
+
+```bash
+# Example with auth
+curl -u admin:changeme1234 http://localhost:8080/admin/api/tenants
+```
 
 ### Quick example — get a token
 

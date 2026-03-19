@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entra ID Mock Server</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f2f2f2;
+            color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            padding: 48px;
+            width: 480px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .card h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .card p {
+            font-size: 14px;
+            color: #5a5a5a;
+            margin-bottom: 32px;
+        }
+        .btn {
+            display: inline-block;
+            background: #0078d4;
+            color: white;
+            text-decoration: none;
+            padding: 10px 24px;
+            border-radius: 3px;
+            font-size: 15px;
+            font-family: inherit;
+        }
+        .btn:hover { background: #106ebe; }
+        .mock-notice {
+            margin-top: 32px;
+            padding: 8px 12px;
+            background: #fff4ce;
+            border: 1px solid #f0c800;
+            font-size: 12px;
+            color: #5a5a5a;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Entra ID Mock Server</h1>
+        <p>Microsoft Entra ID (Azure AD) emulator for development and testing.</p>
+        <a href="/admin/" class="btn">Go to Admin Console</a>
+        <div class="mock-notice">
+            Development/Testing Only
+        </div>
+    </div>
+</body>
+</html>

@@ -3,6 +3,7 @@ server:
   port: 8080
   scheme: "http"
   external_hostname: "localhost:8080"
+  admin_password: "changeme1234"
 
 tenants:
   - id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"

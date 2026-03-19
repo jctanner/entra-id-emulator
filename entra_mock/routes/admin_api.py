@@ -4,12 +4,38 @@ import json
 import secrets
 import uuid
 
-from flask import Blueprint, current_app, jsonify, render_template, request
+from flask import Blueprint, Response, current_app, jsonify, render_template, request
 from werkzeug.security import generate_password_hash
 
 from entra_mock.db import get_db
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
+
+
+# ── Admin Auth ────────────────────────────────────────────────────────────────
+
+def _check_admin_auth():
+    """Return 401 if an admin_password is configured and the request lacks
+    valid HTTP Basic Auth credentials (any username, matching password)."""
+    cfg = current_app.config.get("ENTRA_CONFIG", {})
+    admin_pw = cfg.get("server", {}).get("admin_password")
+    if not admin_pw:
+        return  # no password configured – allow all
+
+    auth = request.authorization
+    if auth and auth.password == admin_pw:
+        return  # credentials match
+
+    return Response(
+        "Authentication required.\n",
+        401,
+        {"WWW-Authenticate": 'Basic realm="Entra ID Admin"'},
+    )
+
+
+@bp.before_request
+def require_admin_auth():
+    return _check_admin_auth()
 
 
 # ── Admin UI ──────────────────────────────────────────────────────────────────
