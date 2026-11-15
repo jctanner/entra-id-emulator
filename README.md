@@ -148,3 +148,12 @@ curl -s -X POST http://localhost:8080/a1b2c3d4-e5f6-7890-abcd-ef1234567890/oauth
 ## License
 
 MIT
+
+## Published releases
+
+Images include application source and the example configuration, run as UID
+10001, and store SQLite data in `/data`. They start without the Flask debugger
+or reloader. Mount a configuration and set `ENTRA_MOCK_CONFIG` to override it.
+Use a persistent volume for `/data`. See [releases](docs/releases.md) for the
+CalVer tags, GHCR image names and digest pinning. The Compose examples remain
+available for local development with source mounts.
